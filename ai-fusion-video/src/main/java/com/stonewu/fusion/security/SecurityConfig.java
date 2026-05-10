@@ -45,38 +45,34 @@ public class SecurityConfig {
                         // SSE 流结束后的 async dispatch 不需要重新认证
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(
-                            "/api/auth/login",
-                            "/api/auth/register",
-                            "/api/auth/refresh",
-                            "/api/system/init/**",
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/refresh",
+                                "/api/system/init/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/actuator/**",
-                            "/media/**",
-                            "/art-styles/**",
-                                "/api/art-styles/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                                "/media/**",
+                                "/art-styles/**",
+                                "/api/art-styles/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setCharacterEncoding("UTF-8");
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.getWriter().write(
-                                    objectMapper.writeValueAsString(CommonResult.error(401, "未登录或登录已过期"))
-                            );
+                                    objectMapper.writeValueAsString(CommonResult.error(401, "未登录或登录已过期")));
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setCharacterEncoding("UTF-8");
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.getWriter().write(
-                                    objectMapper.writeValueAsString(CommonResult.error(403, "没有权限访问"))
-                            );
-                        })
-                )
+                                    objectMapper.writeValueAsString(CommonResult.error(403, "没有权限访问")));
+                        }))
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

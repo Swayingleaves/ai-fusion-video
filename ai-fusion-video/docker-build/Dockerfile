@@ -4,9 +4,16 @@ LABEL maintainer="Stonewu <https://github.com/Stonewuu>"
 
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg curl \
-  && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+  if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
+    sed -i 's|http://archive.ubuntu.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g; s|http://security.ubuntu.com/ubuntu/|https://security.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources; \
+  fi; \
+  if [ -f /etc/apt/sources.list ]; then \
+    sed -i 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|https://security.ubuntu.com/ubuntu|g' /etc/apt/sources.list; \
+  fi; \
+  apt-get update -o Acquire::Retries=5; \
+  apt-get install -y --no-install-recommends ffmpeg curl; \
+  rm -rf /var/lib/apt/lists/*
 
 COPY app.jar app.jar
 

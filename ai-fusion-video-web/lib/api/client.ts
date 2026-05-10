@@ -5,6 +5,13 @@ import type { CommonResult } from "./types";
 const API_BASE_URL =
   (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:18080").replace(/\/$/, "");
 
+const PUBLIC_AUTH_PREFIXES = [
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/refresh",
+  "/api/system/init/",
+];
+
 // 创建 axios 实例
 const http = axios.create({
   baseURL: API_BASE_URL,
@@ -56,11 +63,28 @@ function handleAuthFailure() {
   }
 }
 
+function getRequestPath(url?: string, baseURL?: string) {
+  if (!url) return "";
+  try {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return new URL(url).pathname;
+    }
+    return new URL(url, baseURL ?? API_BASE_URL).pathname;
+  } catch {
+    return url.startsWith("/") ? url : `/${url}`;
+  }
+}
+
+function isPublicAuthRequest(config?: { url?: string; baseURL?: string }) {
+  const path = getRequestPath(config?.url, config?.baseURL);
+  return PUBLIC_AUTH_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 // 请求拦截器：注入 access_token
 http.interceptors.request.use((config) => {
   const parsed = getAuthStorage();
   const token = parsed?.state?.token;
-  if (token) {
+  if (token && !isPublicAuthRequest(config)) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -107,6 +131,15 @@ http.interceptors.response.use(
         error.response?.statusText ||
         error.message ||
         "网络异常";
+      return Promise.reject(new Error(msg));
+    }
+
+    if (isPublicAuthRequest(originalRequest)) {
+      const msg =
+        error.response?.data?.msg ||
+        error.response?.statusText ||
+        error.message ||
+        "请求失败";
       return Promise.reject(new Error(msg));
     }
 
