@@ -9,6 +9,7 @@ interface StreamMarkdownProps {
   content: string;
   streaming?: boolean;
   compact?: boolean;
+  tone?: "default" | "muted";
   className?: string;
 }
 
@@ -16,19 +17,31 @@ export function StreamMarkdown({
   content,
   streaming = false,
   compact = false,
+  tone = "default",
   className,
 }: StreamMarkdownProps) {
   const { resolvedTheme } = useTheme();
   const markdownThemeClass =
     resolvedTheme === "light" ? "x-markdown-light" : "x-markdown-dark";
 
+  const colorVars =
+    tone === "muted"
+      ? {
+          "--heading-color": "var(--foreground)",
+          "--text-color": "var(--muted-foreground)",
+          "--xmd-tail-color": "var(--muted-foreground)",
+        }
+      : {
+          "--heading-color": "var(--foreground)",
+          "--text-color": "var(--foreground)",
+          "--xmd-tail-color": "var(--foreground)",
+        };
+
   const markdownStyle = {
     "--font-size": compact ? "11px" : "12px",
     "--code-inline-text": compact ? "0.82em" : "0.84em",
     "--primary-color": "var(--primary)",
     "--primary-color-hover": "var(--primary)",
-    "--heading-color": "var(--foreground)",
-    "--text-color": "var(--foreground)",
     "--border-color": "var(--border)",
     "--line-color": "var(--border)",
     "--light-bg": "var(--muted)",
@@ -37,7 +50,7 @@ export function StreamMarkdown({
     "--table-body-bg": "var(--card)",
     "--cite-bg": "var(--muted)",
     "--cite-hover-bg": "var(--accent)",
-    "--xmd-tail-color": "var(--foreground)",
+    ...colorVars,
     lineHeight: compact ? 1.6 : 1.65,
   } as CSSProperties;
 
